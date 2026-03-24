@@ -21,14 +21,14 @@ Technology/Protocol Support:
 
 # To do
 
-Mapping/Discovery
-1 - L2 Topology (RFC/ISO priority, fallback to vendor)
-    1.1 - LLDP
-    1.2 - FDB(dot1qTpFdbPort/dot1dTpFdbPort)
-2 - STP Topology
+## Mapping/Discovery
+1. L2 Topology (RFC/ISO priority, fallback to vendor)
+    1.1. LLDP
+    1.2. FDB(dot1qTpFdbPort/dot1dTpFdbPort)
+2. STP Topology
 
-Code Security
-1 - Safe Credential
+## Code Security
+1. Safe Credential
 
 
 Benchmark:
