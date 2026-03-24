@@ -3,7 +3,7 @@ import ipaddress
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from core.file_handler import ConfigFile
 from discovery.discovery_icmp import poll_icmp_active_hosts
-# from discovery.discovery_snmp import SNMPMgmt
+from discovery.discovery_snmp import SNMPMgmt
 # from discovery.discovery_ssh import test_ssh_on_host
 
 
@@ -29,10 +29,10 @@ class DiscoveryEngine:
             The number of worker threads is clamped between 1 and 128.
         """
 
-        self.max_threads = max(1, min(128, int(cfg_file.read_cfg_file("options", "max_threads"))))
+        self.max_threads = max(1, min(128, int(cfg_file.read_cfg_file("options", "max_threads", fallback="10"))))
         self.cfg_file = cfg_file
 
-    def get_subnets_from_user(self) -> list[str]:
+    def get_subnets(self, subnets_input = None) -> list[str]:
         
         """ Prompt the user to enter one or more IPv4 addresses and/or subnets.
 
@@ -55,10 +55,11 @@ class DiscoveryEngine:
         """
 
         while True:
-            subnets_input = input(
-                "ONLY IPv4 FOR NOW!! Enter subnets separated by space.\n"
-                "Ex: 192.168.0.0/24 172.16.230.2 10.23.0.0/16:\n"
-            ).strip()
+            if not subnets_input:
+                subnets_input = input(
+                    "Enter subnets/addresses separated by space.\n"
+                    "Ex: 192.168.0.0/24 172.16.230.2 10.23.0.0/16:\n"
+                ).strip()
 
             try:
                 return self._validate_subnets(subnets_input)
@@ -118,28 +119,6 @@ class DiscoveryEngine:
         return [str(n) for n in (collapsed_v4 + collapsed_v6)]
 
     def discover_services(self, ip_addr_list : list[str]):
-        """ Execute full discovery process.
-
-        Args:
-            subnets (list[str]): List of validated IPv4 subnets in CIDR format.
-
-        Returns:
-            dict[str, dict]: Dictionary keyed by IP address containing
-            discovered service information, for example:
-
-            {
-                "192.168.1.10": {
-                    "icmp": True,
-                    "snmp": {...} | None,
-                    "ssh": {...} | None,
-                    "http": {...} | None,
-                }
-            }
-
-        Workflow:
-            1. ICMP discovery phase
-            2. Service probing phase (if hosts found)
-        """
 
         hosts = self._icmp_phase(ip_addr_list)
 
@@ -147,24 +126,11 @@ class DiscoveryEngine:
             print("[INFO] No active hosts found.")
             return {}
 
-        #self._service_probe_phase(hosts)
+        self._service_probe_phase(hosts)
 
         return hosts
 
     def _icmp_phase(self, subnets: list[str]) -> dict[str, dict]:
-        """ Perform ICMP discovery on provided subnets.
-
-        For each subnet:
-            - Poll active hosts using ICMP
-            - Register alive hosts in result structure
-
-        Args:
-            subnets (list[str]): List of IPv4 networks in CIDR notation.
-
-        Returns:
-            dict[str, dict]: Dictionary of alive hosts with initialized
-            service states.
-        """
 
         hosts: dict[str, dict] = {}
         start = time.perf_counter()
@@ -186,3 +152,54 @@ class DiscoveryEngine:
         print(f"[INFO] ICMP polling took {elapsed:.3f} seconds")
 
         return hosts
+
+    def _probe_snmp(self, ip: str):
+        print(f"[DEBUG] Trying SNMP on {ip}")
+        snmp = SNMPMgmt(ip, self.cfg_file)
+
+        if snmp.connect():
+            print(f"[DEBUG] SNMP OK on {ip}")
+            return snmp
+
+        print(f"[DEBUG] SNMP FAILED on {ip}")
+        return None
+
+    def _service_probe_phase(self, hosts: dict[str, dict]) -> None:
+
+        print("[INFO] Probing services (SNMP / SSH / HTTP)")
+        start = time.perf_counter()
+
+        with ThreadPoolExecutor(max_workers=self.max_threads) as executor:
+            futures = {}
+
+            for ip in hosts.keys():
+
+                if self.cfg_file.read_cfg_file("service", "snmp"):
+                    futures[
+                        executor.submit(self._probe_snmp, ip)
+                    ] = ("snmp", ip)
+
+                # Future extensions:
+                # SSH
+                # futures[
+                #     executor.submit(test_ssh_on_host, ip, self.cfg)
+                # ] = ("ssh", ip)
+
+                # HTTP
+                # futures[
+                #     executor.submit(test_http_on_host, ip, self.cfg)
+                # ] = ("http", ip)
+
+            for future in as_completed(futures):
+                service, ip = futures[future]
+
+                try:
+                    result = future.result()
+
+                    if result:
+                        hosts[ip][service] = result
+                except Exception as e:
+                    print(f"[ERROR] {service} probe failed on {ip}: {e}")
+
+        elapsed = time.perf_counter() - start
+        print(f"[INFO] Service probing took {elapsed:.3f} seconds")
