@@ -1,6 +1,9 @@
 from pathlib import Path
 from configparser import ConfigParser, NoSectionError, NoOptionError
 
+# Yes. We are trading code security and perfomance for sanity and simplicity.
+# No Schemas and no thorough validation.
+
 class ConfigFile:
     def __init__(self):
         self.cfg_file_path = Path(__file__).resolve().parent.parent / "config.ini"
