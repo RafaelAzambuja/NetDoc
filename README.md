@@ -10,7 +10,7 @@ IT Infrastructure mapping and documentation tool based on implemented tools used
 * net-snmp
 * paramiko
 
-Technology/Protocol Support:
+Technology/Protocol Support
 
 | Protocol      | Status              |
 | ------------- | -------------       |
@@ -26,11 +26,11 @@ Technology/Protocol Support:
 | Multithread   | Needs revision      |
 | GUI           | Not Implemented     |
 
-# Benchmark:
+# Benchmark
 ICMP Discovery:
-  IPv4 Only, max_multithread = 10, /24 Network, 42 Alive hosts, No Address Input Overlap: 44.105 seconds average
+  IPv4 Only, max_threads = 10, /24 Network, 42 Alive hosts, No Address Input Overlap: 44.105 seconds average
 
-# Notes:
+# Notes
 ## Easy Setup
 ```
 python3 -m venv some_dir
@@ -39,6 +39,10 @@ pip3 install paramiko
 git clone https://github.com/RafaelAzambuja/NetDoc.git src
 source bin/activate
 cd src
+mv config.ini.example config.ini
+```
+Edit config, then:
+```
 python3 main.py
 ```
 
