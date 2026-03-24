@@ -9,44 +9,45 @@ class SNMPMgmt:
         """
         """
 
+        # Sim, dados sensíveis expostos na classe. Depois verificar maneira mais segura e eficiente
+
         self.agent_interface = snmp_agent_interface
-        self.cfg_file = cfg_file
+        self.snmp_timeout = str(cfg_file.read_cfg_file("snmp", "timeout", fallback="3"))
+        self.snmp_retries = str(cfg_file.read_cfg_file("snmp", "retries", fallback="1"))
         self.get_command = None
         self.getnext_command = None
         self.walk_command = None
-
+        self.sec_level = str(cfg_file.read_cfg_file("snmpv3", "security_level"))
+        self.snmp_user = str(cfg_file.read_cfg_file("snmpv3", "user"))
+        self.auth_opt = str(cfg_file.read_cfg_file("snmpv3", "auth_option"))
+        self.auth_pass = str(cfg_file.read_cfg_file("snmpv3", "auth_password"))
+        self.priv_opt = str(cfg_file.read_cfg_file("snmpv3", "priv_option"))
+        self.priv_pass = str(cfg_file.read_cfg_file("snmpv3", "priv_password"))
+        self.use_v3 = str(cfg_file.read_cfg_file("snmpv3", "use_v3").lower())
+        self.use_v2c = str(cfg_file.read_cfg_file("snmpv2c", "use_v2c").lower())
+        self.communities_raw = cfg_file.read_cfg_file("snmpv2c", "communities")
 
     def connect(self) -> bool:
         '''
 
         '''
-        timeout = str(self.cfg_file.read_cfg_file("snmp", "timeout", fallback="3"))
-        retries = str(self.cfg_file.read_cfg_file("snmp", "retries", fallback="1"))
-        
         # SNMPv3
-        if self.cfg_file.read_cfg_file("snmpv3", "use_v3").lower() == "true":
-
-            sec_level = str(self.cfg_file.read_cfg_file("snmpv3", "security_level"))
-            snmp_user = str(self.cfg_file.read_cfg_file("snmpv3", "user"))
-            auth_opt = str(self.cfg_file.read_cfg_file("snmpv3", "auth_option"))
-            auth_pass = str(self.cfg_file.read_cfg_file("snmpv3", "auth_password"))
-            priv_opt = str(self.cfg_file.read_cfg_file("snmpv3", "priv_option"))
-            priv_pass = str(self.cfg_file.read_cfg_file("snmpv3", "priv_password"))
+        if self.use_v3 == "true":
 
             base_cmd = ["snmpget",
                         "v3",
-                        "-r", retries,
-                        "-t", timeout,
-                        "-l", sec_level,
-                        "-u", snmp_user,
-                        "-a", auth_opt,
-                        "-A", auth_pass,
-                        "-x", priv_opt,
-                        "-X", priv_pass,
+                        "-r", self.snmp_retries,
+                        "-t", self.snmp_timeout,
+                        "-l", self.sec_level,
+                        "-u", self.snmp_user,
+                        "-a", self.auth_opt,
+                        "-A", self.auth_pass,
+                        "-x", self.priv_opt,
+                        "-X", self.priv_pass,
                         self.agent_interface
                     ]
 
-            output = run(base_cmd + ["1.3.6.1.2.1.1.2.0"], capture_output=True, text=True, timeout = 5)
+            output = run(base_cmd + ["1.3.6.1.2.1.1.2.0"], capture_output=True, text=True) # add timeout?
 
             if self.validate_snmp(output.stdout, output.returncode):
 
@@ -58,22 +59,20 @@ class SNMPMgmt:
                 return True
 
         # SNMPv2c
-        elif self.cfg_file.read_cfg_file("snmpv2c", "use_v2c").lower() == "true":
-
-            communities_raw = self.cfg_file.read_cfg_file("snmpv2c", "communities")
-            communities = [c.strip() for c in communities_raw.split(",") if c.strip()]
+        if self.use_v2c == "true":
+            communities = [c.strip() for c in self.communities_raw.split(",") if c.strip()]
 
             for community in communities:
                 base_cmd = [
                     "snmpget",
                     "-v2c",
-                    "-r", retries,
-                    "-t", timeout,
+                    "-r", self.snmp_retries,
+                    "-t", self.snmp_timeout,
                     "-c", community,
                     self.agent_interface
                 ]
 
-                output = run(base_cmd + ["1.3.6.1.2.1.1.2.0"], capture_output=True, text=True, timeout = 5)
+                output = run(base_cmd + ["1.3.6.1.2.1.1.2.0"], capture_output=True, text=True) # add timeout?
 
                 if self.validate_snmp(output.stdout, output.returncode):
 
