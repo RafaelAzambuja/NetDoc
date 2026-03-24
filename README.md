@@ -31,8 +31,8 @@ Technology/Protocol Support:
 1. Safe Credential
 
 
-Benchmark:
+# Benchmark:
 ICMP Discovery:
-  IPv4 Only, max_mutlthread = 10, /24 Network, 42 Alive hosts, No Address Input Overlap: 44.105 seconds average
+  IPv4 Only, max_multithread = 10, /24 Network, 42 Alive hosts, No Address Input Overlap: 44.105 seconds average
 
 
