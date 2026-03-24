@@ -32,9 +32,9 @@ def poll_icmp_active_hosts(subnet: str, cfg_file: ConfigFile) -> list[str]:
     except ValueError:
         return []
 
-    timeout = int(cfg_file.read_cfg_file("icmp", "timeout", fallback="1"))
+    timeout = int(cfg_file.read_cfg_file("icmp", "timeout", fallback='1'))
     max_threads = max(
-        1, min(128, int(cfg_file.read_cfg_file("options", "max_threads", fallback="10")))
+        1, min(128, int(cfg_file.get("options", "max_threads", fallback="10")))
     )
 
     active_hosts: list[str] = []
