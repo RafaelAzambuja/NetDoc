@@ -16,9 +16,25 @@ class DES_3526(DlinkBase):
     host_category = "Switch"
     model = "DES 3526"
 
+    def lldp_info_builder(self):
+
+        lldp_info_dict = {
+            "LLDP Support": "Device has no LLDP Support"
+        }
+
+        return lldp_info_dict
+
 class DES_3550(DlinkBase):
     host_category = "Switch"
     model = "DES 3550"
+
+    def lldp_info_builder(self):
+
+        lldp_info_dict = {
+            "LLDP Support": "Device has no LLDP Support"
+        }
+
+        return lldp_info_dict
 
 class DES_1210_28(DlinkBase):
     host_category = "Switch"
@@ -56,6 +72,14 @@ class DES_1210_28(DlinkBase):
 class DES_1210_28_B1(DES_1210_28):
     
     model = "DES-1210-28 B1"
+
+    def lldp_info_builder(self):
+
+        lldp_info_dict = {
+            "LLDP Status": "Device has no LLDP Support"
+        }
+
+        return lldp_info_dict
 
     # def vlan_get_interface_pvid(self, instance) -> str:
     #     dot1qVlanPvid_oid = ".1.3.6.1.4.1.171.10.75.5.2.7.7.1.1."

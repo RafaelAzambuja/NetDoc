@@ -9,7 +9,7 @@ class SNMPPoller:
         
         self.snmp_obj = snmp_obj
 
-    def _normalize_snmp_string(value : str) -> str:
+    def _normalize_snmp_string(self, value : str) -> str:
             """
 
             """
@@ -24,11 +24,17 @@ class SNMPPoller:
 
         :return: sysName.0 without surrounding quotes, if object type is STRING
         """
-        
+
         sysName_oid = ".1.3.6.1.2.1.1.5.0"
         value = self.snmp_obj.snmpget(sysName_oid)
-
         if value[1] == "STRING":
             return self._normalize_snmp_string(value[0])
 
         return value[0]
+
+    def lldp_get_local_chassis(self) -> str:
+        lldpLocChassisId_oid = ".1.0.8802.1.1.2.1.3.2.0"
+
+        local_chassis = self.snmp_obj.snmpget(lldpLocChassisId_oid)
+
+        return self._normalize_snmp_string(local_chassis[0])
