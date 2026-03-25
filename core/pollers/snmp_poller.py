@@ -19,6 +19,23 @@ class SNMPPoller:
 
             return value.strip('"')
 
+    def baseInfo_get_sys_mac(self) -> str:
+
+        # Fix later
+
+        # Try bridge address.
+        # Later check if there will be a function for this (STP map maybe?)
+        mac = self._normalize_snmp_string(self.snmp_obj.snmpget(".1.3.6.1.2.1.17.1.1.0")[0]).replace(" ", ":")
+        if mac:
+            return mac
+
+        # Try LLDP Chassis. Need to check chassis subtype
+        # mac = self.lldp_get_local_chassis()
+        # if mac:
+        #     return mac
+        
+        return "Fail here. check alternatives"
+
     def baseInfo_get_sysName(self) -> str:
         """
         Get system name via SNMP GET (mib-2.system.sysName.0)

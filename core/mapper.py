@@ -25,9 +25,27 @@ class MapEngine:
 
         #
 
-        for host in hosts:
-            print(host.device_doc_decision())
+        data = {}
 
+        ip_mac_dict = {}
+        for host in hosts:
+
+            new_data = host.device_doc_decision()
+            print
+            if not host.host_category in data:
+                data.update({host.host_category: []})
+
+            if new_data:
+                ip_mac_dict[host.ip] = {"mac": new_data["Base"]["System MAC Address"]}
+
+            print(ip_mac_dict)
+
+            data[host.host_category].append(new_data)
+
+        # Round 2: Covert remote chassis (port, remote port, remote chassis by subtype) to IP Addresses (by mac previously obtained) and interface names, if possible
+        # Build FDB
+
+        print(data)
         return hosts
     
   

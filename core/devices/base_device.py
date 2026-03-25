@@ -48,12 +48,29 @@ class BaseHost:
 
         base_info_dict = {
             "System Management IP Address": self.ip,
+            "System MAC Address": self.baseInfo_get_sys_mac(), # System MAC can be: LLDP Chassis, MAC of L3 Interface (i.e. vlan interface), MAC of the lowest index port in if-MIB, or bridge address (dot1dBaseBridgeAddress)
             "System Name": self.baseInfo_get_sysName(),
             "System Model": self.model,
             "System Vendor": self.vendor
         }
 
         return base_info_dict
+
+    def baseInfo_get_sys_mac(self) -> str:
+        """
+        """
+
+        # Unknow vendor = No fallback to SSH, HTTP, etc.
+        try:
+            poller_snmp = SNMPPoller(self.snmp)
+            sys_mac = poller_snmp.baseInfo_get_sys_mac()
+
+        # except:
+            # poller_ssh = ...
+            # sys_name = poller_ssh.baseInfo_get_sysName(self.ssh)
+
+        finally:
+            return sys_mac
 
     def baseInfo_get_sysName(self) -> str:
         """
