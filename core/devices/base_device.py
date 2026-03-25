@@ -29,6 +29,16 @@ class BaseHost:
             case "Switch":
                 data["Base"] = self.general_baseInfo_builder()
                 data["LLDP"] = self.lldp_info_builder()
+                # Fix logic below
+                lldp_neighbor_list = self.lldp_get_remote_list()
+                if self.lldp_get_local_chassis():
+                    data["LLDP"]["Remote"] = []
+
+                    for loc_port, neighbor_info in lldp_neighbor_list.items():
+                        data["LLDP"]["Remote"].append({
+                            "Local Port": loc_port,
+                            "Neighbor": neighbor_info
+                        })
 
         return data
 
@@ -74,9 +84,21 @@ class BaseHost:
 
         try:
             poller_snmp = SNMPPoller(self.snmp)
-            lldp_get_local_chassis = poller_snmp.lldp_get_local_chassis()
+            lldp_local_chassis = poller_snmp.lldp_get_local_chassis()
 
         # except:
 
         finally:
-            return lldp_get_local_chassis
+            return lldp_local_chassis
+    
+    def lldp_get_remote_list(self) -> dict:
+
+        try:
+            poller_snmp = SNMPPoller(self.snmp)
+            lldp_remote = poller_snmp.lldp_get_remote_entry_list()
+
+        # except:
+
+        finally:
+            return lldp_remote
+    

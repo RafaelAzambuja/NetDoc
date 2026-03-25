@@ -1,3 +1,4 @@
+from re import compile
 from ..discovery.discovery_snmp import SNMPMgmt
 
 class SNMPPoller:
@@ -38,3 +39,41 @@ class SNMPPoller:
         local_chassis = self.snmp_obj.snmpget(lldpLocChassisId_oid)
 
         return self._normalize_snmp_string(local_chassis[0])
+
+    def lldp_get_remote_entry_list(self) -> dict:
+        lldpRemChassisId_oid = ".1.0.8802.1.1.2.1.4.1.1.5"
+        # 1.0.8802.1.1.2.1.4.1.1.5.timeMark.locPort.lldpRemIndex
+        lldp_rem_entry_list = self.snmp_obj.snmpwalk(lldpRemChassisId_oid)
+
+        regex = compile(
+            r"iso\.0\.8802\.1\.1\.2\.1\.4\.1\.1\.5\.(\d+)\.(\d+)\.(\d+)\s*=\s*(.*)"
+        )
+
+        validos = {}
+        if not lldp_rem_entry_list:
+            return {}
+        for lldp_rem_entry in lldp_rem_entry_list:
+            m = regex.match(lldp_rem_entry)
+            if not m:
+                continue
+
+            time_mark = int(m.group(1))
+            local_port = int(m.group(2))
+            rem_index = int(m.group(3))
+
+            chave = (local_port, rem_index)
+
+            # Mantém apenas o maior timemark para cada chave
+            if chave not in validos or time_mark > validos[chave]:
+                validos[chave] = time_mark
+
+        # "timeMark.localPort.remIndex"
+
+        data = {}
+        for (local_port, rem_index), time_mark in validos.items():
+            data[local_port] = {
+                "Remote Host": self._normalize_snmp_string(self.snmp_obj.snmpget(".1.0.8802.1.1.2.1.4.1.1.5."+f"{time_mark}.{local_port}.{rem_index}")[0]),
+                "Remote Port": self._normalize_snmp_string(self.snmp_obj.snmpget(".1.0.8802.1.1.2.1.4.1.1.7."+f"{time_mark}.{local_port}.{rem_index}")[0])
+            }
+
+        return data
