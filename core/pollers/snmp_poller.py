@@ -1,5 +1,7 @@
 from re import compile
 from ..discovery.discovery_snmp import SNMPMgmt
+from ..common import convert_hex_to_oid, convert_hex_to_utf8
+
 
 class SNMPPoller:
 
@@ -18,6 +20,10 @@ class SNMPPoller:
                 return ""
 
             return value.strip('"')
+
+    # ---------------
+    # Base Info
+    # ---------------
 
     def baseInfo_get_sys_mac(self) -> str:
 
@@ -49,6 +55,39 @@ class SNMPPoller:
             return self._normalize_snmp_string(value[0])
 
         return value[0]
+
+    # ---------------
+    # VLAN
+    # ---------------
+
+    def vlan_get_static_list(self) -> list:
+        vlanStaticEntry_oid = ".1.3.6.1.2.1.17.7.1.4.3.1.1"
+        vlan_entries = self.snmp_obj.snmpwalk(vlanStaticEntry_oid)
+        vlan_entry_list = []
+
+        for vlan_entry in vlan_entries:
+            parts = vlan_entry.split()
+            oid = parts[0]
+            value_type = parts[2]
+
+            vlan_vid = oid.split('.')[13]
+            vlan_name = vlan_name = " ".join(parts[3:])
+
+            if value_type == "STRING:":
+                vlan_name = self._normalize_snmp_string(vlan_name)
+            elif value_type == "Hex-STRING:":
+                vlan_name = convert_hex_to_utf8(vlan_name)
+
+            vlan_entry_list.append({
+                "VID": vlan_vid,
+                "Name": vlan_name
+            })
+        
+        return vlan_entry_list
+
+    # ---------------
+    # TOPOLOGY
+    # ---------------
 
     def lldp_get_local_chassis(self) -> str:
         lldpLocChassisId_oid = ".1.0.8802.1.1.2.1.3.2.0"
@@ -94,3 +133,14 @@ class SNMPPoller:
             }
 
         return data
+
+    def fdb_lookup(self, mac) -> str:
+        dot1qTpFdbPort_oid = ".1.3.6.1.2.1.17.7.1.2.2.1.2."
+        vlan_list = self.vlan_get_static_list()
+        mac = convert_hex_to_oid(mac)
+        for vlan in vlan_list:
+            portIndex = self.snmp_obj.snmpget(dot1qTpFdbPort_oid+vlan["VID"]+mac)
+            if portIndex:
+                return portIndex[0]
+        
+        return ""

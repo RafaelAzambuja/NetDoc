@@ -1,5 +1,6 @@
 from ..pollers.snmp_poller import SNMPPoller
 
+
 class BaseHost:
 
     host_category = "Unknown"
@@ -41,6 +42,10 @@ class BaseHost:
                         })
 
         return data
+
+    # ---------------
+    # Base Info
+    # ---------------
 
     def general_baseInfo_builder(self) -> dict:
 
@@ -88,6 +93,32 @@ class BaseHost:
         finally:
             return sys_name
 
+    # ---------------
+    # VLAN
+    # ---------------
+
+    def vlan_get_static_list(self) -> list:
+        """
+        """
+        
+        # Check VLAN auto create
+
+        try:
+            poller_snmp = SNMPPoller(self.snmp)
+            vlan_list = poller_snmp.vlan_get_static_list()
+
+        # except:
+            # poller_ssh = ...
+            # sys_name = poller_ssh.baseInfo_get_sysName(self.ssh)
+
+        finally:
+            return vlan_list
+
+
+    # ---------------
+    # TOPOLOGY
+    # ---------------
+
     def lldp_info_builder(self):
 
         lldp_info_dict = {
@@ -118,4 +149,14 @@ class BaseHost:
 
         finally:
             return lldp_remote
-    
+
+    def fdb_lookup(self, mac) -> str:
+        fdb_local_port = ""
+        try:
+            poller_snmp = SNMPPoller(self.snmp)
+            fdb_local_port = poller_snmp.fdb_lookup(mac)
+
+        # except:
+
+        finally:
+            return fdb_local_port
