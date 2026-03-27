@@ -1,36 +1,15 @@
-# About
+## About
 IT Infrastructure mapping and documentation tool based on implemented tools used in the following published papers:
 
 [Gerenciamento da rede: infraestrutura e monitoramento do Hospital Universitário de Santa Maria (HUSM)](https://periodicos.ufn.edu.br/index.php/disciplinarumNT/article/view/4534)
 
 [Implementação de um Mecanismo Para Detecção de Mensagens Router Advertisement Maliciosas e Servidores DHCPv6 Falsos em Redes de Equipamentos Legados](https://sol.sbc.org.br/index.php/errc/article/view/26057)
 
-# Requirements
+## Requirements
 * Python3
 * net-snmp
 * paramiko
 
-Technology/Protocol Support
-
-| Protocol      | Status              |
-| ------------- | -------------       |
-| IPv4          | Testing Required    |
-| IPv6          | Testing Required    |
-| SNMP v2c      | Implemented         |
-| SNMP v3       | Testing Required    |
-| SSH           | Not Implemented     |
-| HTTP          | Not Implemented     |
-
-| Technology    | Status              |
-| ------------- | -------------       |
-| Multithread   | Needs revision      |
-| GUI           | Not Implemented     |
-
-# Benchmark
-ICMP Discovery:
-  IPv4 Only, max_threads = 10, /24 Network, 42 Alive hosts, No Address Input Overlap: 44.105 seconds average
-
-# Notes
 ## Easy Setup
 ```
 python3 -m venv some_dir
@@ -46,23 +25,50 @@ Edit config, then:
 python3 main.py
 ```
 
-## Branches
-1. Create your own branches following the syntax: dev-"your name"
-2. old-main is just for reference, code is currently being refactored
+## Technology/Protocol Support
 
-## New vendors and device models
-1. Just extend Classes Host_Device, Switch, ..., as needed
+| Protocol      | Status              |
+| ------------- | -------------       |
+| IPv4          | Testing Required    |
+| IPv6          | Testing Required    |
+| SNMP v2c      | Implemented         |
+| SNMP v3       | Testing Required    |
+| SSH           | Not Implemented     |
+| HTTP          | Not Implemented     |
 
-# To do
+| Technology    | Status              |
+| ------------- | -------------       |
+| Multithread   | Needs revision      |
+| GUI           | Not Implemented     |
 
-## Mapping/Discovery
-1. L2 Topology (RFC/ISO priority, fallback to vendor)
-    1.1. LLDP
-    1.2. FDB(dot1qTpFdbPort/dot1dTpFdbPort)
-2. STP Topology
+## Benchmark
+```
+Option:
+1 - Mapping
+0 - Exit
 
-## Code Security
-1. Safe Credential
+Option: 1
+
+Option:
+1 - Build IT Infrastructure Documentation
+0 - Return
+
+Option: 1
+Enter subnets/addresses separated by space.
+Ex: 192.168.0.0/24 172.16.230.2 10.23.0.0/16:
+10.10.0.0/25 192.168.200.0/24
+[INFO] MAP - Mapping started.
+[INFO] ICMP - Polling active hosts in 10.10.0.0/25
+[INFO] ICMP - Polling active hosts in 192.168.200.0/24
+[INFO] ICMP - Polling took 60.311 seconds
+[INFO] SERVICES - Starting service probe
+[INFO] SERVICES - Probe took 42.371 seconds
+[INFO] MAP - Discovery took 102.682 seconds
+[INFO] MAP - Identifying vendors.
+[INFO] MAP - Vendor identification took 0.000498 seconds
+[INFO] MAP - Mapping took 318.476 seconds
+[INFO] Total alive hosts: 75
+```
 
 
 

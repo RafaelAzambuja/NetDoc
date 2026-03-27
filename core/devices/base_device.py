@@ -41,6 +41,19 @@ class BaseHost:
                             "Neighbor": neighbor_info
                         })
 
+            case "Access Point":
+                data["Base"] = self.general_baseInfo_builder()
+                data["LLDP"] = self.lldp_info_builder()
+                # Fix logic below
+                lldp_neighbor_list = self.lldp_get_remote_list()
+                if self.lldp_get_local_chassis():
+                    data["LLDP"]["Remote"] = []
+
+                    for loc_port, neighbor_info in lldp_neighbor_list.items():
+                        data["LLDP"]["Remote"].append({
+                            "Local Port": loc_port,
+                            "Neighbor": neighbor_info
+                        })
         return data
 
     # ---------------
@@ -70,6 +83,8 @@ class BaseHost:
         try:
             sys_mac = self.poller_snmp.baseInfo_get_sys_mac()
 
+        except:
+            sys_mac = self.poller_snmp.baseInfo_vendor_get_sys_mac()
         # except:
             # poller_ssh = ...
 

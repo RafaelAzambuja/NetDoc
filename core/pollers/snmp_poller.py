@@ -40,7 +40,7 @@ class SNMPPoller:
         # if mac:
         #     return mac
         
-        return "Fail here. check alternatives"
+        return None
 
     def baseInfo_get_sysName(self) -> str:
         """

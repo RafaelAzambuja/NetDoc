@@ -7,6 +7,7 @@ from .hp.hp_base import *
 from .hpe.hpe_base import *
 from .huawei.huawei_base import *
 from .tplink.tplink_base import *
+from .unifi.unifi_base import *
 
 
 def create_device(hosts: dict) -> list:
@@ -93,6 +94,10 @@ def _identify_type_vendor_model(ip, ssh, snmp : SNMPMgmt):
             # HPE
             case "iso.3.6.1.4.1.25506.11.1.169":
                 return HPE1920_48G(ip, ssh, snmp)
+
+            # Unifi bullshit oid
+            case "iso.3.6.1.4.1.41112":
+                return UnifiBase(ip, ssh, snmp)
             
             # Generic SNMP Device
             case _:
