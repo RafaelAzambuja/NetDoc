@@ -1,5 +1,5 @@
 import time
-from core.file_handler import ConfigFile
+from core.file_handler import ConfigFile, JsonFile
 from core.devices.factory import create_device
 from .discovery.discovery_network import DiscoveryEngine
 
@@ -86,7 +86,11 @@ class MapEngine:
                     })
 
         print(f"[INFO] MAP - Mapping took {time.perf_counter() - start_all:.3f} seconds")
-        print(data)
+        json_out = JsonFile()
+        # Dumb. Fix
+        json_out.create_json("map.json")
+        json_out.save_all("map.json", data)
+        #print(data)
         return hosts
     
   

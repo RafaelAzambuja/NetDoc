@@ -1,0 +1,31 @@
+[output]
+dir = ./output
+
+[icmp]
+timeout = 2
+
+[service]
+snmp = true
+ssh = false
+http = false
+
+[snmp]
+timeout = 3
+retries = 1
+
+[snmpv2c]
+use_v2c = true
+communities = public, private
+
+[snmpv3]
+use_v3 = false
+user = user
+security_level = authPriv
+auth_option = MD5
+auth_password = authpass
+priv_option = DES
+priv_password = privpass
+
+
+[options]
+max_threads = 10

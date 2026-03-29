@@ -1,3 +1,6 @@
+import json
+from tempfile import NamedTemporaryFile
+from os import replace
 from pathlib import Path
 from configparser import ConfigParser, NoSectionError, NoOptionError
 
@@ -24,7 +27,7 @@ class ConfigFile:
             raise RuntimeError("[WARN] Config file is empty or unreadable")
 
         structure = {
-            "output": ["json", "csv"],
+            "output": ["dir"],
             "icmp": ["timeout"],
             "service": ["snmp", "ssh", "http"],
             "snmp": ["timeout", "retries"],
@@ -59,3 +62,70 @@ class ConfigFile:
             raise KeyError(f"[WARN] Missing '{key}' in section '{section}'") from e
         except ValueError as e:
             raise ValueError(f"[WARN] Invalid value for '{key}' in section '{section}': {e}")
+
+class JsonFile:
+
+    dir_path = ""
+
+    def __init__(self,):
+
+        
+        # init sets path
+        try:
+            cfg_file = ConfigFile()
+            cfg_file.validate_config()
+
+            output_dir = Path(cfg_file.read_cfg_file("output", "dir"))
+
+            if not output_dir.is_absolute():
+                output_dir = Path(__file__).resolve().parent / output_dir
+
+            self.dir_path = output_dir
+
+        except FileNotFoundError as e:
+            raise RuntimeError(f"[ERROR] Config file missing: {e}")
+        except RuntimeError as e:
+            raise RuntimeError(f"[ERROR] Invalid config: {e}")
+
+    # Create a new json (map, topology)
+    def create_json(self, file_name : str):
+
+        file_path = Path(self.dir_path) / file_name
+
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        if file_path.exists() and file_path.is_file():
+            file_path.unlink()
+
+        file_path.touch()
+
+    def load_data(self, file_name : str):
+
+        file_path = Path(self.dir_path) / file_name
+
+        if file_path.exists() and file_path.stat().st_size > 0:
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except json.JSONDecodeError:
+                return {}
+        return {}
+
+    def _atomic_write(self, file_name : str, data):
+        file_path = Path(self.dir_path) / file_name
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        with NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=file_path.parent,
+            delete=False
+        ) as tmp:
+            json.dump(data, tmp, indent=4)
+            tmp_name = tmp.name
+
+        replace(tmp_name, file_path)
+
+    # fix
+    def save_all(self, file_name, data):
+        self._atomic_write(file_name, data)

@@ -5,6 +5,11 @@ IT Infrastructure mapping and documentation tool based on implemented tools used
 
 [Implementação de um Mecanismo Para Detecção de Mensagens Router Advertisement Maliciosas e Servidores DHCPv6 Falsos em Redes de Equipamentos Legados](https://sol.sbc.org.br/index.php/errc/article/view/26057)
 
+### This is not...
+... ❌ an orchestration tool;
+... ❌ a vulnerability scan tool;
+... ❌ a magic tool that will point out flaws in your network design.
+
 ## Requirements
 * Python3
 * net-snmp
