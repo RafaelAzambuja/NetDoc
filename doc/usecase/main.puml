@@ -1,0 +1,24 @@
+@startuml
+
+actor User
+
+rectangle "NetDoc" {
+
+  User --> (Start Application)
+
+  (Start Application) --> (Validate Configuration)
+
+  User --> (View Main Menu)
+  User --> (Select Option)
+
+  (Select Option) --> (Open Mapping Menu) : option 1
+  (Select Option) --> (Exit Application) : option 0
+
+  (Open Mapping Menu) --> (Run Network Mapping) : option 1
+  (Open Mapping Menu) --> (Return to Main Menu) : option 0
+
+  (Run Network Mapping) --> (View Results)
+
+}
+
+@enduml

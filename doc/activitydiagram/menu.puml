@@ -1,0 +1,29 @@
+@startuml
+
+start
+
+:Show Main Menu;
+:Read Input;
+
+if (Option == 1?) then (yes)
+  :Show Mapping Menu;
+  :Read Input;
+
+  if (Option == 1?) then (yes)
+    :Run Mapping;
+    :Display Results;
+  elseif (Option == 0)
+    :Return to Main Menu;
+  else
+    :Invalid Option;
+  endif
+
+elseif (Option == 0)
+  :Exit Program;
+  stop
+
+else
+  :Invalid Option;
+endif
+
+@enduml
