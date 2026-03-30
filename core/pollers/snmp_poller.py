@@ -124,7 +124,7 @@ class SNMPPoller:
 
             data = {
                 "Interface ifIndex": if_index,
-                "Interface Desciption": self.interface_get_name(if_index),
+                "Interface Description": self.interface_get_name(if_index),
                 "Interface Alias": self.interface_get_alias(if_index),
                 "Interface Type": self._identify_interface_type(if_type)[0],
                 "Interface Physical Address": self.interface_get_phyAddress(if_index)
@@ -178,6 +178,9 @@ class SNMPPoller:
 
         ifName_oid = ".1.3.6.1.2.1.31.1.1.1.1."
         value = self.snmp_obj.snmpget(ifName_oid+instance)
+
+        if not value[0]:
+            return ""
 
         if value[1] == "STRING":
             return self._normalize_snmp_string(value[0])

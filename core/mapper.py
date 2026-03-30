@@ -2,6 +2,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from core.file_handler import ConfigFile, JsonFile
 from core.devices.factory import create_device
+from core.topology import *
 from .discovery.discovery_network import DiscoveryEngine
 
 
@@ -129,6 +130,11 @@ class MapEngine:
         json_out.create_json("map.json")
         json_out.save_all("map.json", data)
         #print(data)
+
+        topology_engine = TopologyEngine(data)
+
+        topology_engine.build_topology()
+
         return hosts
     
   

@@ -29,7 +29,7 @@ class BaseHost:
         match self.host_category:
             case "Switch":
                 data["Base"] = self.general_baseInfo_builder()
-                data["Interfaces"] = self.interface_get_list()
+                #data["Interfaces"] = self.interface_get_list()
                 data["LLDP"] = self.lldp_info_builder()
                 # Fix logic below
                 lldp_neighbor_list = self.lldp_get_remote_list()
@@ -44,7 +44,7 @@ class BaseHost:
 
             case "Access Point":
                 data["Base"] = self.general_baseInfo_builder()
-                data["Interfaces"] = self.interface_get_list()
+                #data["Interfaces"] = self.interface_get_list()
                 data["LLDP"] = self.lldp_info_builder()
                 # Fix logic below
                 lldp_neighbor_list = self.lldp_get_remote_list()
