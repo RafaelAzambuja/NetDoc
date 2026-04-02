@@ -30,6 +30,7 @@ class BaseHost:
             case "Switch":
                 data["Base"] = self.general_baseInfo_builder()
                 #data["Interfaces"] = self.interface_get_list()
+                data["VLANS"] = self.vlan_get_static_list()
                 data["LLDP"] = self.lldp_info_builder()
                 # Fix logic below
                 lldp_neighbor_list = self.lldp_get_remote_list()
@@ -135,6 +136,8 @@ class BaseHost:
         # except:
             # poller_ssh = ...
 
+        except:
+            vlan_list = []
         finally:
             return vlan_list
 

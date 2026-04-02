@@ -450,6 +450,11 @@ class SNMPPoller:
         dot1qTpFdbPort_oid = ".1.3.6.1.2.1.17.7.1.2.2.1.2."
         vlan_list = self.vlan_get_static_list()
         mac = convert_hex_to_oid(mac)
+
+        # !!!!!!!!!!!!!!!!!
+        # Bug here: Cisco switches won't return vlan 1 in vlan static list
+        # !!!!!!!!!!!!!!!!!
+
         for vlan in vlan_list:
             portIndex = self.snmp_obj.snmpget(dot1qTpFdbPort_oid+vlan["VID"]+mac)
             if portIndex[0]:

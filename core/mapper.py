@@ -22,9 +22,11 @@ class MapEngine:
         return host.host_category, host.ip, new_data, mac
 
     def process_fdb(self, host, ip, mac):
+
         if ip == host.ip:
             return None
 
+        # Build vlan list everytime. Expensive
         result = host.fdb_lookup(mac)
         if not result:
             return None
