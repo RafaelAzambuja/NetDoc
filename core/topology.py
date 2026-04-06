@@ -13,7 +13,7 @@ class TopologyEngine:
             self.data = map_file
 
 
-    def analyze_devices(self):
+    def elect_root(self):
         stats = {}
 
         for category, devices in self.data.items():
@@ -38,9 +38,47 @@ class TopologyEngine:
 
         return stats, max_fdb, max_lldp
 
-    def build_topology(self):
-        stats, max_fdb, max_lldp = self.analyze_devices()
+    def analyze_link(self):
+        pass
 
-        # Network root?
-        print("Device with most FDB:", max_fdb)
-        print("Device with most LLDP:", max_lldp)
+    def build_topology(self):
+        stats, max_fdb, max_lldp = self.elect_root()
+
+        if max_fdb[1]['fdb_count'] > 0:
+            root_ip = max_fdb[0]
+        
+        elif max_lldp[1]['lldp_count'] > 0:
+            root_ip = max_lldp[0]
+
+        #else:
+        #    pass
+
+
+        #{
+        #   "Host": "host_ip",
+        #   "Neighbors": [
+        #       {
+        #           "Neighbor": "neighbor_ip_or_mac",
+        #           "Local Port": "Local_port",
+        #           "Remote Port": "Remote_port"
+        #       }
+        #   ]
+        #}
+
+
+        for category, devices in self.data.items():
+            for device in devices:
+                if root_ip == device.get("Base", {}).get("System Management IP Address"):
+                    neighbors_lldp = device.get("LLDP", {}).get('Remote', [])
+                    neighbors_fdb = device.get("FDB", [])
+
+                    n_count = 0
+                    for lldp_neighbor in neighbors_lldp:
+                        n_count += 1
+                        print(f"Neighbor {n_count}:")
+                        print(f"Remote Host: {lldp_neighbor['Neighbor']['Remote Host']}")
+                        print(f"Local port: {lldp_neighbor['Local Port']}")
+                        print(f"Remote Port {lldp_neighbor['Neighbor']['Remote Port']}")
+
+                    print(f"LLDP: {neighbors_lldp}\n")
+                    print(neighbors_fdb)

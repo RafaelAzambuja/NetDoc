@@ -96,34 +96,34 @@ class MapEngine:
         # Build FDB
         # ----------
 
-        host_data = {}
+        # host_data = {}
 
-        for host in hosts:
-            host_data_list = data.get(host.host_category, [])
-            for d in host_data_list:
-                ip = d.get("Base", {}).get("System Management IP Address")
-                if ip:
-                    host_data[ip] = d
-                    if "FDB" not in d:
-                        d["FDB"] = []
+        # for host in hosts:
+        #     host_data_list = data.get(host.host_category, [])
+        #     for d in host_data_list:
+        #         ip = d.get("Base", {}).get("System Management IP Address")
+        #         if ip:
+        #             host_data[ip] = d
+        #             if "FDB" not in d:
+        #                 d["FDB"] = []
 
-        with ThreadPoolExecutor(max_workers=self.max_threads) as executor:
-            futures = []
+        # with ThreadPoolExecutor(max_workers=self.max_threads) as executor:
+        #     futures = []
 
-            for host in hosts:
-                if host.ip not in host_data:
-                    continue
+        #     for host in hosts:
+        #         if host.ip not in host_data:
+        #             continue
 
-                for ip, mac in ip_mac_dict.items():
-                    futures.append(executor.submit(self.process_fdb, host, ip, mac))
+        #         for ip, mac in ip_mac_dict.items():
+        #             futures.append(executor.submit(self.process_fdb, host, ip, mac))
 
-            for future in as_completed(futures):
-                result = future.result()
-                if not result:
-                    continue
+        #     for future in as_completed(futures):
+        #         result = future.result()
+        #         if not result:
+        #             continue
 
-                host_ip = result.pop("host_ip")
-                host_data[host_ip]["FDB"].append(result)
+        #         host_ip = result.pop("host_ip")
+        #         host_data[host_ip]["FDB"].append(result)
 
 
         print(f"[INFO] MAP - Mapping took {time.perf_counter() - start_all:.3f} seconds")
@@ -131,12 +131,14 @@ class MapEngine:
         # Dumb. Fix
         json_out.create_json("map.json")
         json_out.save_all("map.json", data)
-        #print(data)
+        # #print(data)
 
-        topology_engine = TopologyEngine(data)
+        # data = json_out.load_data("map.json")
 
-        topology_engine.build_topology()
+        # topology_engine = TopologyEngine(data)
 
-        return hosts
+        # topology_engine.build_topology()
+
+        #return hosts
     
   

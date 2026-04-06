@@ -16,86 +16,118 @@ class SNMPPoller:
             """
 
             """
+            # if None
             if not value:
                 return ""
 
-            return value.strip('"')
+            # else, remove trailing space, tab space, new line
+
+            return value.rstrip()
 
     # ---------------
     # Base Info
     # ---------------
 
     def baseInfo_get_sys_mac(self) -> str:
+        '''
 
-        # Fix later
+        '''
 
-        # Try bridge address.
-        # Later check if there will be a function for this (STP map maybe?)
-        mac = self._normalize_snmp_string(self.snmp_obj.snmpget(".1.3.6.1.2.1.17.1.1.0")[0]).replace(" ", ":")
-        if mac:
-            return mac
+        dot1dBaseBridgeAddress_oid = ".1.3.6.1.2.1.17.1.1.0"
 
-        # Try LLDP Chassis. Need to check chassis subtype
-        # mac = self.lldp_get_local_chassis()
-        # if mac:
-        #     return mac
-        
-        return None
+        result = self.snmp_obj.snmpget(dot1dBaseBridgeAddress_oid)
+        value_type = result[1]
+        value = self._normalize_snmp_string(result[0])
+
+        match value_type:
+
+            case 'STRING':
+                value = ' '.join(f"{ord(c):02x}" for c in value)
+                value = value.replace(" ", ":")
+                return value
+
+            case 'Hex-STRING':
+                value = value.replace(" ", ":")
+                return value
+
+            case _:
+                return value
 
     def baseInfo_get_sysName(self) -> str:
-        """
-        Get system name via SNMP GET (mib-2.system.sysName.0)
+        '''Get system name via SNMP GET (mib-2.system.sysName.0)
 
         :return: sysName.0 without surrounding quotes, if object type is STRING
-        """
+        '''
 
         sysName_oid = ".1.3.6.1.2.1.1.5.0"
-        value = self.snmp_obj.snmpget(sysName_oid)
 
-        # Could all of these be replaced with match/case?
-        if value[1] == "STRING":
-            return self._normalize_snmp_string(value[0])
-        if value[1] == "Hex-STRING:":
-                return convert_hex_to_utf8(value[0])
+        result = self.snmp_obj.snmpget(sysName_oid)
+        value_type = result[1]
+        value = self._normalize_snmp_string(result[0])
 
-        return value[0]
+        match value_type:
+
+            case 'STRING':
+                return value
+
+            case 'Hex-STRING':
+                value = convert_hex_to_utf8(value)
+                return value
+
+            case _:
+                return value
 
     def baseInfo_get_sysLocation(self) -> str:
-        """
-        Get system location via SNMP GET (mib-2.system.sysLocation.0)
+        '''Get system location via SNMP GET (mib-2.system.sysLocation.0)
 
         :return: sysLocation.0 without surrounding quotes, if object type is STRING
-        """
+        '''
 
         sysLocation_oid = ".1.3.6.1.2.1.1.6.0"
-        value = self.snmp_obj.snmpget(sysLocation_oid)
 
-        if value[1] == "STRING":
-            return self._normalize_snmp_string(value[0])
+        result = self.snmp_obj.snmpget(sysLocation_oid)
+        value_type = result[1]
+        value = self._normalize_snmp_string(result[0])
 
-        return value[0]
+        match value_type:
+
+            case 'STRING':
+                return value
+
+            case 'Hex-STRING':
+                value = convert_hex_to_utf8(value)
+                return value
+            
+            case _:
+                return value
 
     # ---------------
     # VLAN
     # ---------------
 
     def vlan_get_static_list(self) -> list:
+        '''
+        
+        '''
+
         vlanStaticEntry_oid = ".1.3.6.1.2.1.17.7.1.4.3.1.1"
-        vlan_entries = self.snmp_obj.snmpwalk(vlanStaticEntry_oid)
+
+        result = self.snmp_obj.snmpwalk(vlanStaticEntry_oid)
         vlan_entry_list = []
 
-        for vlan_entry in vlan_entries:
-            parts = vlan_entry.split()
+        for entry in result:
+            parts = entry.split()
             oid = parts[0]
             value_type = parts[2]
 
             vlan_vid = oid.split('.')[13]
             vlan_name = vlan_name = " ".join(parts[3:])
 
-            if value_type == "STRING:":
-                vlan_name = self._normalize_snmp_string(vlan_name)
-            elif value_type == "Hex-STRING:":
-                vlan_name = convert_hex_to_utf8(vlan_name)
+            vlan_name = self._normalize_snmp_string(vlan_name)
+
+            match value_type:
+                case 'Hex-String':
+                    vlan_name = convert_hex_to_utf8(vlan_name)
 
             vlan_entry_list.append({
                 "VID": vlan_vid,
@@ -111,15 +143,17 @@ class SNMPPoller:
     def interface_get_list(self) -> list:
 
         ifType_oid = ".1.3.6.1.2.1.2.2.1.3"
-        if_list = self.snmp_obj.snmpwalk(ifType_oid)
+        
+        result = self.snmp_obj.snmpwalk(ifType_oid)
 
-        if not if_list:
+        if not result:
             return []
 
         iface_list_dict = []
         
-        for iface in if_list:
-            object_instance, _, _, if_type, *_ = iface.split()
+        for entry in result:
+
+            object_instance, _, _, if_type, *_ = entry.split()
             if_index = object_instance.rsplit('.', 1)[-1]
 
             data = {
@@ -458,6 +492,7 @@ class SNMPPoller:
         for vlan in vlan_list:
             portIndex = self.snmp_obj.snmpget(dot1qTpFdbPort_oid+vlan["VID"]+mac)
             if portIndex[0]:
-                return (vlan["VID"], portIndex[0])
+                local_port = self.interface_get_name(portIndex[0])
+                return (vlan["VID"], local_port)
         
         return ""
