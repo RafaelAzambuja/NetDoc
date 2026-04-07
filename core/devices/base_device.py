@@ -31,32 +31,32 @@ class BaseHost:
                 data["Base"] = self.general_baseInfo_builder()
                 data["Interfaces"] = self.interface_get_list()
                 data["VLANS"] = self.vlan_get_static_list()
-                #data["LLDP"] = self.lldp_info_builder()
-                ## Fix logic below
-                #lldp_neighbor_list = self.lldp_get_remote_list()
-                #if self.lldp_get_local_chassis():
-                #    data["LLDP"]["Remote"] = []
+                data["LLDP"] = self.lldp_info_builder()
+                # Fix logic below
+                lldp_neighbor_list = self.lldp_get_remote_list()
+                if self.lldp_get_local_chassis():
+                   data["LLDP"]["Remote"] = []
 
-                #    for loc_port, neighbor_info in lldp_neighbor_list.items():
-                #        data["LLDP"]["Remote"].append({
-                #            "Local Port": loc_port,
-                #            "Neighbor": neighbor_info
-                #        })
+                   for loc_port, neighbor_info in lldp_neighbor_list.items():
+                       data["LLDP"]["Remote"].append({
+                           "Local Port": loc_port,
+                           "Neighbor": neighbor_info
+                       })
 
             case "Access Point":
                 data["Base"] = self.general_baseInfo_builder()
                 data["Interfaces"] = self.interface_get_list()
-                #data["LLDP"] = self.lldp_info_builder()
-                ## Fix logic below
-                #lldp_neighbor_list = self.lldp_get_remote_list()
-                # if self.lldp_get_local_chassis():
-                #     data["LLDP"]["Remote"] = []
+                data["LLDP"] = self.lldp_info_builder()
+                # Fix logic below
+                lldp_neighbor_list = self.lldp_get_remote_list()
+                if self.lldp_get_local_chassis():
+                    data["LLDP"]["Remote"] = []
 
-                #     for loc_port, neighbor_info in lldp_neighbor_list.items():
-                #         data["LLDP"]["Remote"].append({
-                #             "Local Port": loc_port,
-                #             "Neighbor": neighbor_info
-                #         })
+                    for loc_port, neighbor_info in lldp_neighbor_list.items():
+                        data["LLDP"]["Remote"].append({
+                            "Local Port": loc_port,
+                            "Neighbor": neighbor_info
+                        })
         return data
 
     # ---------------

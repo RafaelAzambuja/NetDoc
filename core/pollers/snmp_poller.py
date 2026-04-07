@@ -20,9 +20,9 @@ class SNMPPoller:
             if not value:
                 return ""
 
-            # else, remove trailing space, tab space, new line
+            # else, remove trailing space, tab space, new line, quotes
 
-            return value.rstrip()
+            return value.strip('"').rstrip()
 
     # ---------------
     # Base Info
@@ -35,9 +35,8 @@ class SNMPPoller:
 
         dot1dBaseBridgeAddress_oid = ".1.3.6.1.2.1.17.1.1.0"
 
-        result = self.snmp_obj.snmpget(dot1dBaseBridgeAddress_oid)
-        value_type = result[1]
-        value = self._normalize_snmp_string(result[0])
+        value, value_type = self.snmp_obj.snmpget(dot1dBaseBridgeAddress_oid)
+        value = self._normalize_snmp_string(value)
 
         match value_type:
 
@@ -61,14 +60,10 @@ class SNMPPoller:
 
         sysName_oid = ".1.3.6.1.2.1.1.5.0"
 
-        result = self.snmp_obj.snmpget(sysName_oid)
-        value_type = result[1]
-        value = self._normalize_snmp_string(result[0])
+        value, value_type = self.snmp_obj.snmpget(sysName_oid)
+        value = self._normalize_snmp_string(value)
 
         match value_type:
-
-            case 'STRING':
-                return value
 
             case 'Hex-STRING':
                 value = convert_hex_to_utf8(value)
@@ -85,14 +80,10 @@ class SNMPPoller:
 
         sysLocation_oid = ".1.3.6.1.2.1.1.6.0"
 
-        result = self.snmp_obj.snmpget(sysLocation_oid)
-        value_type = result[1]
-        value = self._normalize_snmp_string(result[0])
+        value, value_type = self.snmp_obj.snmpget(sysLocation_oid)
+        value = self._normalize_snmp_string(value)
 
         match value_type:
-
-            case 'STRING':
-                return value
 
             case 'Hex-STRING':
                 value = convert_hex_to_utf8(value)
@@ -168,7 +159,7 @@ class SNMPPoller:
         
         return iface_list_dict
 
-    def _identify_interface_type(self, interface_type) -> tuple:
+    def _identify_interface_type(self, interface_type : str) -> tuple:
 
         # Not sure about 'scope'
         match interface_type:
@@ -203,38 +194,38 @@ class SNMPPoller:
                 return (interface_type, "Unknown")
 
     def interface_get_name(self, instance) -> str:
-        """
-        Get interface textual name via SNMP GET (mib-2.ifMIB.ifName.instance)
+        """Get interface textual name via SNMP GET (mib-2.ifMIB.ifName.instance)
 
         :return: If value is STRING: ifName.instance without surrounding quotes
         :return: If value is Hex-STRING: ifName.instance converted to UTF-8
         """
 
         ifName_oid = ".1.3.6.1.2.1.31.1.1.1.1."
-        value = self.snmp_obj.snmpget(ifName_oid+instance)
 
-        if not value[0]:
-            return ""
+        value, value_type = self.snmp_obj.snmpget(ifName_oid+instance)
+        value = self._normalize_snmp_string(value)
 
-        if value[1] == "STRING":
-            return self._normalize_snmp_string(value[0])
+        match value_type:
 
-        if value[1] == "Hex-STRING":
-            return convert_hex_to_utf8(value[0])
-
-        return value[0]
+            case 'Hex-STRING':
+                value = convert_hex_to_utf8(value)
+                return value
+            
+            case _:
+                return value
 
     def interface_get_type(self, instance) -> dict:
-        """
-        Get interface enumerated value for IANAifType-MIB DEFINITIONS via SNMP GET (mib-2.ifMIB.ifType.instance)
+        """Get interface enumerated value for IANAifType-MIB DEFINITIONS via SNMP GET (mib-2.ifMIB.ifType.instance)
 
         :return:
         """
 
         ifType_oid = ".1.3.6.1.2.1.2.2.1.3."
-        value = self.snmp_obj.snmpget(ifType_oid+instance)
 
-        return value[0] # Hopefully type is always INTEGER
+        value, value_type = self.snmp_obj.snmpget(ifType_oid+instance)
+        value = self._normalize_snmp_string(value)
+
+        return value # Hopefully type is always INTEGER
 
     def interface_get_phyAddress(self, instance) -> str:
         """
@@ -242,11 +233,14 @@ class SNMPPoller:
         """
 
         ifPhyAddress_oid = ".1.3.6.1.2.1.2.2.1.6."
-        value = self.snmp_obj.snmpget(ifPhyAddress_oid+instance)
 
-        if any(value):
-            return value[0].replace(" ", ":").strip(':') # Hopefully type is always Hex-STRING
-        return ""
+        value, value_type = self.snmp_obj.snmpget(ifPhyAddress_oid+instance)
+        value = self._normalize_snmp_string(value)
+
+        if value:
+            value = value.replace(" ", ":") # Hopefully type is always Hex-STRING
+        
+        return value
 
     def interface_get_alias(self, instance) -> str:
         """
@@ -254,21 +248,27 @@ class SNMPPoller:
         """
 
         ifAlias_oid = ".1.3.6.1.2.1.31.1.1.1.18."
-        value = self.snmp_obj.snmpget(ifAlias_oid+instance)
 
-        if value[1] == "STRING":
-            return self._normalize_snmp_string(value[0])
+        value, value_type = self.snmp_obj.snmpget(ifAlias_oid+instance)
+        value = self._normalize_snmp_string(value)
 
-        if value[1] == "Hex-STRING":
-            return convert_hex_to_utf8(value[0])
+        match value_type:
 
-        return value[0]
+            case 'Hex-STRING':
+                value = convert_hex_to_utf8(value)
+                return value
+            
+            case _:
+                return value
 
     # ---------------
     # TOPOLOGY
     # ---------------
 
     def lldp_normalize_chassis_id_subtype(self, chassis : tuple, chassis_id_subtype : str) -> tuple:
+
+        # Fix.
+
         match chassis_id_subtype:
 
             case '1': # entPhysicalAlias (stack member?)
@@ -335,6 +335,8 @@ class SNMPPoller:
 
     def lldp_normalize_port_subtype(self, port, port_subtype):
         
+        # Fix.
+
         match port_subtype:
             case '1':
 
@@ -398,21 +400,28 @@ class SNMPPoller:
                 return (port[0], "Unknown port subtype")
 
     def lldp_get_local_chassis(self) -> tuple | None:
+        '''
+
+        '''
+
         lldpLocChassisId_oid = ".1.0.8802.1.1.2.1.3.2.0"
 
-        local_chassis = self.snmp_obj.snmpget(lldpLocChassisId_oid)
+        value, value_type = self.snmp_obj.snmpget(lldpLocChassisId_oid)
+        value = self._normalize_snmp_string(value)
 
-        return (self._normalize_snmp_string(local_chassis[0]), local_chassis[1])
+        return value, value_type
 
     def lldp_get_local_chassis_subtype(self) -> str | None:
+        '''
+        
+        '''
+        
         lldpLocChassisIdSubtype_oid = ".1.0.8802.1.1.2.1.3.1.0"
 
-        local_chassis_id_subtype = self.snmp_obj.snmpget(lldpLocChassisIdSubtype_oid)
-        
-        if local_chassis_id_subtype[0]:
-            return local_chassis_id_subtype[0]
-        
-        return None
+        value, value_type = self.snmp_obj.snmpget(lldpLocChassisIdSubtype_oid)
+        value = self._normalize_snmp_string(value)
+
+        return value
 
     def lldp_get_remote_entry_list(self) -> dict:
 
@@ -473,15 +482,24 @@ class SNMPPoller:
 
 
     def lldp_get_remote_port_id_subtype(self, instance):
-        lldpRemPortIdSubtype_oid = ".1.0.8802.1.1.2.1.4.1.1.6."
-        value = self.snmp_obj.snmpget(lldpRemPortIdSubtype_oid+instance)
-        if not value:
-            return ""
+        '''
+        
+        '''
 
-        return value[0]
+        lldpRemPortIdSubtype_oid = ".1.0.8802.1.1.2.1.4.1.1.6."
+
+        value, value_type = self.snmp_obj.snmpget(lldpRemPortIdSubtype_oid+instance)
+        value = self._normalize_snmp_string(value)
+
+        return value
 
     def fdb_lookup(self, mac) -> tuple:
+        '''
+        
+        '''
+        
         dot1qTpFdbPort_oid = ".1.3.6.1.2.1.17.7.1.2.2.1.2."
+
         vlan_list = self.vlan_get_static_list()
         mac = convert_hex_to_oid(mac)
 

@@ -38,8 +38,20 @@ class TopologyEngine:
 
         return stats, max_fdb, max_lldp
 
-    def analyze_link(self):
-        pass
+    def rename_this_funtion(self, neighbors_lldp, neighbors_fdb):
+
+            n_count = 0
+            depth = 0
+
+            for lldp_neighbor in neighbors_lldp:
+                n_count += 1
+                print(f"Neighbor {n_count}:")
+                print(f"Remote Host ID: {lldp_neighbor['Neighbor']['Remote Host']}")
+                print(f"Remote Host IP: {}")
+                print(f"Local port: {lldp_neighbor['Local Port']}")
+                print(f"Remote Port {lldp_neighbor['Neighbor']['Remote Port']}")
+
+                self.rename_this_funtion()
 
     def build_topology(self):
         stats, max_fdb, max_lldp = self.elect_root()
@@ -65,20 +77,20 @@ class TopologyEngine:
         #   ]
         #}
 
+        # 1. Find root.
+        # 2. Place root.
+        # 3. place root's neighbors.
+        # 4. Place root's neighbors' neighbors.
+        # 5. When finished, restart the list ignoring already placed devices
 
+        devices_already = []
         for category, devices in self.data.items():
             for device in devices:
+                if device in devices_already:
+                    continue
+
                 if root_ip == device.get("Base", {}).get("System Management IP Address"):
                     neighbors_lldp = device.get("LLDP", {}).get('Remote', [])
                     neighbors_fdb = device.get("FDB", [])
 
-                    n_count = 0
-                    for lldp_neighbor in neighbors_lldp:
-                        n_count += 1
-                        print(f"Neighbor {n_count}:")
-                        print(f"Remote Host: {lldp_neighbor['Neighbor']['Remote Host']}")
-                        print(f"Local port: {lldp_neighbor['Local Port']}")
-                        print(f"Remote Port {lldp_neighbor['Neighbor']['Remote Port']}")
-
-                    print(f"LLDP: {neighbors_lldp}\n")
-                    print(neighbors_fdb)
+                    devices_already.extend(self.rename_this_funtion(root_ip ,neighbors_lldp, neighbors_fdb))
