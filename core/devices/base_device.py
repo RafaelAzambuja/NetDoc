@@ -29,8 +29,19 @@ class BaseHost:
         match self.host_category:
             case "Switch":
                 data["Base"] = self.general_baseInfo_builder()
-                data["Interfaces"] = self.interface_get_list()
                 data["VLANS"] = self.vlan_get_static_list()
+                data["Interfaces"] = self.interface_get_list()
+                
+                vlan_ports_untagged = self.vlan_get_untagged()
+
+                for iface in data["Interfaces"]:
+                    iface["Untagged VLANS"] = []
+
+                    for vlan in vlan_ports_untagged:
+                        if iface["Interface ifIndex"] in vlan["ports"]:
+                            iface["Untagged VLANS"].append(vlan["VID"])
+
+                #data["Interfaces"]["Tagged VLANS"] = self.vlan_get_untagged()
                 data["LLDP"] = self.lldp_info_builder()
                 # Fix logic below
                 lldp_neighbor_list = self.lldp_get_remote_list()
@@ -140,6 +151,34 @@ class BaseHost:
             vlan_list = []
         finally:
             return vlan_list
+
+    def vlan_get_untagged(self) -> list:
+        """
+        """
+
+        try:
+            vlan_list = self.poller_snmp.vlan_get_static_list()
+            vlan_untagged = []
+
+            for vlan in vlan_list:
+                vid = vlan["VID"]
+                ports = self.poller_snmp.vlan_get_untagged(vid)
+
+                vlan_untagged.append({
+                    "VID": vid,
+                    "ports": ports
+                })
+
+            return vlan_untagged
+
+        # except:
+            # poller_ssh = ...
+
+        except:
+            vlan_untagged = []
+
+        finally:
+            return vlan_untagged
 
     # ---------------
     # INTERFACES

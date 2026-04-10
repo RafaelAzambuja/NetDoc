@@ -5,10 +5,6 @@ IT Infrastructure mapping and documentation tool based on implemented tools used
 
 [Implementação de um Mecanismo Para Detecção de Mensagens Router Advertisement Maliciosas e Servidores DHCPv6 Falsos em Redes de Equipamentos Legados](https://sol.sbc.org.br/index.php/errc/article/view/26057)
 
-### This is not...
-... ❌ an orchestration tool;<br>
-... ❌ a vulnerability scan tool;
-
 ## Requirements
 * Python3
 * net-snmp
@@ -29,21 +25,35 @@ Edit config, then:
 python3 main.py
 ```
 
-## Technology/Protocol Support
+## Features
 
-| Protocol      | Status              |
-| ------------- | -------------       |
-| IPv4          | Testing Required    |
-| IPv6          | Testing Required    |
-| SNMP v2c      | Implemented         |
-| SNMP v3       | Testing Required    |
-| SSH           | Not Implemented     |
-| HTTP          | Not Implemented     |
+### Probing
 
-| Technology    | Status              |
-| ------------- | -------------       |
-| Multithread   | Needs revision      |
-| GUI           | Not Implemented     |
+| Feature          | Status             |
+| -------------    | -------------      |
+| IPv4 Probing     |    OK              |
+| IPv6 Probing     | Testing Required   |
+| SNMP v2c Probing |    OK              |
+| SNMP v3  Probing | Testing Required   |
+| SSH Probing      | Not Implemented    |
+| HTTP Probing     | Not Implemented    |
+
+### SNMP Polling
+
+|   Resource            |   Status  |
+| -------------         | -------------                 |
+| System Name           |       OK                      |
+| System Location       |       OK                      |
+| System MAC (Bridge)   |   OK (dot1dBaseBridgeAddress) |
+| System Vendor         |   OK (sysObjectID)    |
+| System Model          |   Partial (sysObjectID) |
+| Interface Name        |   OK (mib-2.ifMIB.ifName) |
+| Interface Alias       |   OK (mib-2.ifMIB.ifAlias) |
+| Interface Type        |   OK (mib-2.ifMIB.ifType) |
+| Interface Physical Address | OK (mib-2.ifMIB.ifPhysAddress) |
+| VLAN Name | OK (vlanStaticEntry) |
+| VLAN ID | OK (vlanStaticEntry) |
+
 
 ## Benchmark
 ```

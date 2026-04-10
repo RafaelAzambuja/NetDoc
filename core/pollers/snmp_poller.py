@@ -1,6 +1,6 @@
 from re import compile
 from ..discovery.discovery_snmp import SNMPMgmt
-from ..common import convert_hex_to_oid, convert_hex_to_utf8
+from ..common import convert_hex_to_oid, convert_hex_to_utf8, convert_port_list
 
 
 class SNMPPoller:
@@ -127,6 +127,61 @@ class SNMPPoller:
         
         return vlan_entry_list
 
+    def vlan_get_interface_pvid(self, instance) -> str:
+        '''
+        
+        '''
+        
+        dot1qPvid_oid = "1.3.6.1.2.1.17.7.1.4.5.1.1."
+
+        result = self.snmp_obj.snmpget(dot1qPvid_oid+instance)
+
+        return self._normalize_snmp_string(result[0])
+    
+    def vlan_get_untagged(self, vid) -> list:
+        '''
+        
+        '''
+        
+        dot1qVlanStaticUntaggedPorts_oid = ".1.3.6.1.2.1.17.7.1.4.3.1.4."
+
+        result = self.snmp_obj.snmpget(dot1qVlanStaticUntaggedPorts_oid+vid)
+        
+        if not result[1]:
+            return []
+
+        port_list = result[0].split()
+        port_list = convert_port_list(port_list)
+
+        #port_untagged_dict = {"VID": vid, "if Indexes": port_list}
+        
+        #return port_untagged_dict
+        return port_list
+
+    def vlan_get_tagged(self, vid) -> dict:
+        '''
+        
+        '''
+
+        dot1qVlanStaticEgressPorts_oid = ".1.3.6.1.2.1.17.7.1.4.3.1.2."
+
+        result = self.snmp_obj.snmpget(dot1qVlanStaticEgressPorts_oid+vid)
+
+        if not result[1]:
+            return []
+
+        port_list = result[0].split()
+        port_list = convert_port_list(port_list)
+		
+        port_untagged_dict = self.vlan_get_untagged(vid)
+        port_egress_dict = {"VID": vid, "if Indexes": port_list}
+
+        for port_egress in reversed(port_egress_dict["if Indexes"]):
+            if port_egress in port_untagged_dict["if Indexes"]:
+                port_egress_dict["if Indexes"].remove(port_egress)
+        
+        return port_egress_dict
+
     # ---------------
     # INTERFACES
     # ---------------
@@ -152,7 +207,8 @@ class SNMPPoller:
                 "Interface Description": self.interface_get_name(if_index),
                 "Interface Alias": self.interface_get_alias(if_index),
                 "Interface Type": self._identify_interface_type(if_type)[0],
-                "Interface Physical Address": self.interface_get_phyAddress(if_index)
+                "Interface Physical Address": self.interface_get_phyAddress(if_index),
+                "PVID": self.vlan_get_interface_pvid(if_index),
             }
 
             iface_list_dict.append(data)

@@ -11,6 +11,16 @@ class SNMPPoller_Cisco(SNMPPoller):
         vlan_list.extend(super().vlan_get_static_list())
         return vlan_list
 
+    def vlan_get_untagged(self, vid) -> list:
+        '''
+        
+        '''
+        
+        if str(vid) == '1':
+            return []
+        
+        return super().vlan_get_untagged(vid)
+    
 class CiscoBase(BaseHost):
     vendor = "Cisco"
 
