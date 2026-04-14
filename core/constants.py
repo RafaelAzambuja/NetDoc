@@ -18,6 +18,9 @@ VLAN_EGRESS_PORTS = ".1.3.6.1.2.1.17.7.1.4.3.1.2"           # dot1qVlanStaticEgr
 
 ## INTERFACES
 
+INTERFACE_NAME_OID = ".1.3.6.1.2.1.31.1.1.1.1"
+INTERFACE_TYPE_OID = ".1.3.6.1.2.1.2.2.1.3"
+
 INTERFACE_TYPE_MAP = {
     '1': ("Other", "Other"),
     '6': ("ethernetCsmacd", "Port"),
@@ -30,24 +33,30 @@ INTERFACE_TYPE_MAP = {
     '161': ("LAG 802.3ad", "Link Aggregation"),
 }
 
+INTERFACE_PHYSICAL_ADDRESS_OID = ".1.3.6.1.2.1.2.2.1.6"
+INTERFACE_ALIAS_OID = ".1.3.6.1.2.1.31.1.1.1.18"
+
 ## LLDP
 
+LLDP_CHASSIS_ID_OID = ".1.0.8802.1.1.2.1.3.2.0"
+LLDP_CHASSIS_ID_SUBTYPE_OID = ".1.0.8802.1.1.2.1.3.1.0"
+
 LLDP_CHASSIS_SUBTYPE_MAP = {
-    '1': ("chassisComponent", "colon"),
+    '1': ("chassisComponent", "mac"),
     '2': ("interfaceAlias", "utf8"),
-    '3': ("portComponent", "colon"),
-    '4': ("macAddress", "colon"),
-    '5': ("networkAddress", None),
-    '6': ("interfaceName", None),
-    '7': ("local", None),
+    '3': ("portComponent", "mac"),
+    '4': ("macAddress", "mac"),
+    '5': ("networkAddress", "utf8"),
+    '6': ("interfaceName", "utf8"),
+    '7': ("local", "utf8"),
 }
 
 LLDP_PORT_SUBTYPE_MAP = {
     '1': ("interfaceAlias", "utf8"),
-    '2': ("portComponent", "colon"),
-    '3': ("macAddress", "colon"),
-    '4': ("networkAddress", None),
+    '2': ("portComponent", "mac"),
+    '3': ("macAddress", "mac"),
+    '4': ("networkAddress", "utf8"),
     '5': ("interfaceName", "utf8"),
     '6': ("agentCircuitId", "utf8"),
-    '7': ("local", None),
+    '7': ("local", "utf8"),
 }

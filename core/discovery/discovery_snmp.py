@@ -108,6 +108,27 @@ class SNMPMgmt:
         self.walk_command[0] = "snmpwalk"
         self.walk_command.insert(2, "-Cc")
 
+    def _parse_snmp_line(self, line: str) -> tuple[str, str, str]:
+
+        try:
+            oid_part, value_part = line.split(" = ", 1)
+
+            # Case: TYPE exists
+            if ": " in value_part:
+                value_type, value = value_part.split(": ", 1)
+            else:
+                # Case: no TYPE (e.g. "", No Such Object, etc.)
+                value_type = None
+                value = value_part
+
+            # Normalize value (optional but recommended)
+            value = value.strip().strip('"')
+
+            return oid_part.strip(), value, value_type
+
+        except ValueError:
+            return None, None, None
+        
     def snmpget(self, oid: str) -> tuple[str, str]:
         '''
         Perform SNMP GetRequest.
@@ -124,18 +145,15 @@ class SNMPMgmt:
             iso.3.6.1.2.1.1.5.0 = STRING: "hostname"
         '''
 
+
         command = self.get_command + [oid]
         output = run(command, capture_output=True, text=True)
-        
-        #print(f"Command: {command} | SNMP Output: {output.stdout} | SNMP Error: {output.stderr}")
 
         if self.validate_snmp(output.stdout, output.returncode):
-            output.stdout = output.stdout.rstrip()
-            output.stdout = output.stdout.split()
-            value = " ".join(output.stdout[3:])
-            value_type = output.stdout[2][:-1]
+            line = output.stdout.strip()
+            _, value, value_type = self._parse_snmp_line(line)
             return value, value_type
-        
+
         return None, None
 
     def snmpgetnext(self, oid: str) -> tuple[str, str]:
@@ -155,12 +173,10 @@ class SNMPMgmt:
         output = run(command, capture_output=True, text=True)
 
         if self.validate_snmp(output.stdout, output.returncode):
-            stdout = output.stdout.rstrip()
-            stdout = stdout.split()
-            value = " ".join(stdout[3:])
-            value_type = stdout[2][:-1]
+            line = output.stdout.strip()
+            _, value, value_type = self._parse_snmp_line(line)
             return value, value_type
-        
+
         return None, None
 
     def snmpwalk(self, oid: str) -> list[str]:
@@ -180,10 +196,21 @@ class SNMPMgmt:
 
         command = self.walk_command + [oid]
         output = run(command, capture_output=True, text=True)
+
         if self.validate_snmp(output.stdout, output.returncode):
-            output_list = output.stdout.split('\n')
-            output_list.pop(-1)
-            return output_list
-    
-        # print(f"SNMP Error: {output.stdout}")
+            lines = output.stdout.strip().split('\n')
+            results = []
+
+            for line in lines:
+                oid_part, value, value_type = self._parse_snmp_line(line)
+
+                if oid_part is not None:
+                    results.append({
+                        "oid": oid_part,
+                        "value": value,
+                        "type": value_type
+                    })
+
+            return results
+
         return None

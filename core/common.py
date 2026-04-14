@@ -1,10 +1,14 @@
 import re
 
-def normalize_result(value, value_type, mode):
+def normalize_result(value, value_type = "default", mode = "default"):
+
+    if value_type is None:
+        return ""
 
     value = value.strip('"').rstrip()
 
     match value_type:
+
         case 'STRING':
             match mode: 
                 case "utf8":
@@ -24,10 +28,10 @@ def normalize_result(value, value_type, mode):
                     return convert_hex_to_utf8(value)
 
                 case _:
-                    return str(value) # ?
+                    return value # ?
 
         case _:
-            return ""
+            return value
 
 def convert_hex_to_oid(hex_string) -> str:
 
